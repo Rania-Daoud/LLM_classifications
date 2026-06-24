@@ -2,6 +2,8 @@
 
 # Note: The template functions here and the dataframe format for structuring your solution is a suggested but not mandatory approach. You can use a different approach if you like, as long as you clearly answer the questions and communicate your answers clearly.
 
+import string
+
 import nltk
 import spacy
 import pandas as pd
@@ -61,7 +63,7 @@ def read_novels(path="texts/novels") -> pd.DataFrame:
 
     # create the dataframe.
     df = pd.DataFrame(data=names_and_contents, columns=[
-                      "title", "author", "year", "content"])
+                      "title", "author", "year", "text"])
 
     # set the year as index and sort by it.
     df = df.set_index("year")
@@ -75,17 +77,29 @@ def parse(df, store_path=Path.cwd() / "pickles", out_name="parsed.pickle"):
     pass
 
 
-def nltk_ttr(text):
-    """Calculates the type-token ratio of a text. Text is tokenized using nltk.word_tokenize."""
-    pass
+# function to get type-token ratio
+def nltk_ttr(text:str) -> float:
+    # use RegexpTokenizer to ignore punctuation.
+    tokenizer = nltk.RegexpTokenizer(r'\w+')
+
+    # transfer text to lower case to ignore capitalization.
+    document_words=tokenizer.tokenize(text.lower())
+
+    # set removes duplicate values.
+    unique_words = set(document_words)
+
+    # divide unique words / all words to get ttr
+    ttr = len(unique_words) / len(document_words)
+    return ttr
 
 
-def get_ttrs(df):
-    """helper function to add ttr to a dataframe"""
-    results = {}
-    for i, row in df.iterrows():
-        results[row["title"]] = nltk_ttr(row["text"])
-    return results
+#helper function to add ttr to a dataframe
+def get_ttrs(df)-> pd.DataFrame:
+    # add a new column where its value is derived from "text" column.
+    # mapping function returns a map of ttr.
+    # convert to a list to be able to add to DataFrame.
+    df["token"]=list(map(nltk_ttr,df["text"]))
+    return df
 
 
 def get_fks(df):
@@ -104,8 +118,24 @@ if __name__ == "__main__":
     """
     uncomment the following lines to run the functions once you have completed them
     """
-    path = "texts/novels"
+    path = Path.cwd() / "texts" / "novels"
     print(path)
-    df = read_novels(path)
-    print(df)
+    df = read_novels(path) # this line will fail until you have completed the read_novels function above.
     print(df.head())
+    nltk.download("cmudict")
+    parse(df)
+    print(df.head())
+    get_ttrs(df)
+    print(df.head())
+    # print(get_fks(df))
+    # df = pd.read_pickle(Path.cwd() / "pickles" /"name.pickle")
+    # call functions for part (e) here.
+
+    # print(df.head())
+    # nltk.download("cmudict")
+    # parse(df)
+    # print(df.head())
+    # print(get_ttrs(df))
+    # print(get_fks(df))
+    # df = pd.read_pickle(Path.cwd() / "pickles" /"name.pickle")
+    # call functions for part (e) here.
