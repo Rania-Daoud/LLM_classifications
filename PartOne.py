@@ -1,15 +1,26 @@
-#NLP assessment template 2026
+# NLP assessment template 2026
 
 # Note: The template functions here and the dataframe format for structuring your solution is a suggested but not mandatory approach. You can use a different approach if you like, as long as you clearly answer the questions and communicate your answers clearly.
 
 import nltk
 import spacy
+import pandas as pd
 from pathlib import Path
+from os import listdir, read, path
+from os.path import isfile, join, splitext
 
 
 nlp = spacy.load("en_core_web_sm")
 nlp.max_length = 2000000
 
+# helper function to get the content of the file and split the file name.
+
+
+def get_content(path: str, file_name: str) -> list[str]:
+    f = open(f"{path}/{file_name}")
+    file_name_no_extension, _ = splitext(file_name)
+    title, author, year = file_name_no_extension.split('-')
+    return [title, author, year, f.read()]
 
 
 def fk_level(text, d):
@@ -40,10 +51,22 @@ def count_syl(word, d):
     pass
 
 
-def read_novels(path=Path.cwd() / "texts" / "novels"):
-    """Reads texts from a directory of .txt files and returns a DataFrame with the text, title,
-    author, and year"""
-    pass
+def read_novels(path="texts/novels") -> pd.DataFrame:
+    # get the file names
+    file_names = [f for f in listdir(path) if isfile(join(path, f))]
+
+    # get the list of title, author, year, content.
+    names_and_contents = map(
+        lambda file_name: get_content(path, file_name), file_names)
+
+    # create the dataframe.
+    df = pd.DataFrame(data=names_and_contents, columns=[
+                      "title", "author", "year", "content"])
+
+    # set the year as index and sort by it.
+    df = df.set_index("year")
+    df = df.sort_index()
+    return df
 
 
 def parse(df, store_path=Path.cwd() / "pickles", out_name="parsed.pickle"):
@@ -74,22 +97,15 @@ def get_fks(df):
     return results
 
 
-#.. add functions for part (e) here
-
+# .. add functions for part (e) here
 
 
 if __name__ == "__main__":
     """
     uncomment the following lines to run the functions once you have completed them
     """
-    # path = Path.cwd() / "texts" / "novels"
-    # print(path)
-    # df = read_novels(path) # this line will fail until you have completed the read_novels function above.
-    # print(df.head())
-    # nltk.download("cmudict")
-    # parse(df)
-    # print(df.head())
-    # print(get_ttrs(df))
-    # print(get_fks(df))
-    # df = pd.read_pickle(Path.cwd() / "pickles" /"name.pickle")
-    # call functions for part (e) here.
+    path = "texts/novels"
+    print(path)
+    df = read_novels(path)
+    print(df)
+    print(df.head())
