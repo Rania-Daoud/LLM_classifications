@@ -16,8 +16,6 @@ nlp = spacy.load("en_core_web_sm")
 nlp.max_length = 2000000
 
 # helper function to get the content of the file and split the file name.
-
-
 def get_content(path: str, file_name: str) -> list[str]:
     f = open(f"{path}/{file_name}")
     file_name_no_extension, _ = splitext(file_name)

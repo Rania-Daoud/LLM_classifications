@@ -28,3 +28,28 @@ year
 1930            Blood_Meridian  McCarthy  Your ideas are terrifying and your hearts are ...
 
 ```
+### Adding TTR
+
+- TTR is the type-token ratio, it's the ratio of unique words to the total number of words
+- the function `nltk_ttr`: 
+  - takes a text.
+  - removes punctuation.
+  - lowers case of the whole text(ignore case).
+  - get the unique number of words.
+  - divide the unique number of words by the total number of words.
+  - example "This is a sample text, this should be easy to parse" -> 
+    - unique words: this, is, a, sample, text, should, be, easy, to, parse. (10)
+    - ttr = 8/9 = .89. 
+- the function `get_ttrs`
+  - takes a pandas dataframe.
+  - add a new column "ttr" using the function `nltk_ttr`
+  - example:
+  ```
+                title             author                         text                         token
+    year                                                                                             
+    1811  Sense_and_Sensibility   Austen  \nCHAPTER 1\n\nThe family of Dashwood had long...  0.052356
+    1855        North_and_South  Gaskell  'Wooed and married and a'.'\n'Edith!' said Mar...  0.053415
+    1858   A_Tale_of_Two_Cities  Dickens  Book the First--Recalled to Life\n\n\n\n\nI. T...  0.070454
+    1872                Erewhon   Butler  SAMUEL BUTLER.\nAugust 7, 1901\n\nCHAPTER I: W...  0.091810
+    1877           The_American    James  THE AMERICAN\n\nby Henry James\n\n\n1877\n\n\n...  0.065669
+```
