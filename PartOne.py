@@ -15,6 +15,7 @@ from os.path import isfile, join, splitext
 nlp = spacy.load("en_core_web_sm")
 nlp.max_length = 2000000
 
+
 # helper function to get the content of the file and split the file name.
 def get_content(path: str, file_name: str) -> list[str]:
     f = open(f"{path}/{file_name}")
@@ -23,18 +24,34 @@ def get_content(path: str, file_name: str) -> list[str]:
     return [title, author, year, f.read()]
 
 
-def fk_level(text, d):
-    """Returns the Flesch-Kincaid Grade Level of a text (higher grade is more difficult).
-    Requires a dictionary of syllables per word.
+# Returns the Flesch-Kincaid Reading-Ease of a text (higher grade is more difficult).
+def fk_level(text: str, d: dict) -> float:
 
-    Args:
-        text (str): The text to analyze.
-        d (dict): A dictionary of syllables per word.
+    # use RegexpTokenizer to ignore punctuation.
+    # also ignore numbers.
+    tokenizer = nltk.RegexpTokenizer(r'[a-zA-Z]')
 
-    Returns:
-        float: The Flesch-Kincaid Grade Level of the text. (higher grade is more difficult)
-    """
-    pass
+    # transfer text to lower case to ignore capitalization.
+    document_words = tokenizer.tokenize(text.lower())
+
+    # get sentences in the text
+    sentences = nltk.sent_tokenize(text)
+
+    # get the totl number of words in this documents.
+    total_words = len(document_words)
+
+    # get the total number of sentences in this document
+    total_sentences = len(sentences)
+
+    # calculate the number of syllables in this document
+    total_syllables = 0
+    for word in document_words:
+        total_syllables += len(d[word][0])
+
+    # formuala for fk_level reading ease score
+    fk_level = 206.835-1.015 * total_words / \
+        total_sentences-84.6 * total_syllables/total_words
+    return fk_level
 
 
 def count_syl(word, d):
@@ -76,12 +93,12 @@ def parse(df, store_path=Path.cwd() / "pickles", out_name="parsed.pickle"):
 
 
 # function to get type-token ratio
-def nltk_ttr(text:str) -> float:
+def nltk_ttr(text: str) -> float:
     # use RegexpTokenizer to ignore punctuation.
     tokenizer = nltk.RegexpTokenizer(r'\w+')
 
     # transfer text to lower case to ignore capitalization.
-    document_words=tokenizer.tokenize(text.lower())
+    document_words = tokenizer.tokenize(text.lower())
 
     # set removes duplicate values.
     unique_words = set(document_words)
@@ -91,22 +108,27 @@ def nltk_ttr(text:str) -> float:
     return ttr
 
 
-#helper function to add ttr to a dataframe
-def get_ttrs(df)-> pd.DataFrame:
+# helper function to add ttr to a dataframe
+def get_ttrs(df) -> pd.DataFrame:
     # add a new column where its value is derived from "text" column.
     # mapping function returns a map of ttr.
     # convert to a list to be able to add to DataFrame.
-    df["token"]=list(map(nltk_ttr,df["text"]))
+    df["token"] = list(map(nltk_ttr, df["text"]))
     return df
 
 
+# helper function to add fk scores to a dataframe
 def get_fks(df):
-    """helper function to add fk scores to a dataframe"""
-    results = {}
+
+    # get the syllables per word mapping
     cmudict = nltk.corpus.cmudict.dict()
-    for i, row in df.iterrows():
-        results[row["title"]] = round(fk_level(row["text"], cmudict), 4)
-    return results
+
+    # add a new column where its value is derived from "text" column.
+    # mapping function returns a map of fks.
+    # convert to a list to be able to add to DataFrame.
+    df["fks"] = list(
+        map(lambda x: round(fk_level(x, cmudict), 4), df["text"]))
+    return df
 
 
 # .. add functions for part (e) here
@@ -118,22 +140,15 @@ if __name__ == "__main__":
     """
     path = Path.cwd() / "texts" / "novels"
     print(path)
-    df = read_novels(path) # this line will fail until you have completed the read_novels function above.
+    # this line will fail until you have completed the read_novels function above.
+    df = read_novels(path)
     print(df.head())
     nltk.download("cmudict")
     parse(df)
     print(df.head())
     get_ttrs(df)
     print(df.head())
-    # print(get_fks(df))
-    # df = pd.read_pickle(Path.cwd() / "pickles" /"name.pickle")
-    # call functions for part (e) here.
-
-    # print(df.head())
-    # nltk.download("cmudict")
-    # parse(df)
-    # print(df.head())
-    # print(get_ttrs(df))
-    # print(get_fks(df))
+    get_fks(df)
+    print(df.head())
     # df = pd.read_pickle(Path.cwd() / "pickles" /"name.pickle")
     # call functions for part (e) here.
